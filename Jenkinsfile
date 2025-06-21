@@ -15,10 +15,13 @@ pipeline {
         sh '''
           python3 -m venv venv
           . venv/bin/activate
-          python3 -m pip install --upgrade pip
-          export PIP_BREAK_SYSTEM_PACKAGES=1
+
+          # Step 1: bootstrap pip cleanly
+          curl -sS https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages
+
+          # Step 2: Install dependencies smoothly
           python3 -m pip install flask selenium pytest webdriver-manager requests
-          python3 -m pip list
+
           python app.py &
           sleep 3
           

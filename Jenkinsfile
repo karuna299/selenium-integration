@@ -8,38 +8,29 @@ pipeline {
       }
     }
 
-    stage('Setup Virtualenv & Launch Flask') {
+    stage('Setup Node & Newman') {
       steps {
+        script {
+          // Use Jenkins NodeJS plugin tools
+        }
+        // Shell commands to ensure Node.js and Newman
         sh '''
-          python3 -m venv venv
-          . venv/bin/activate
-
-          # Remove broken pip from venv
-          rm -rf venv/lib/python*/site-packages/pip* venv/bin/pip* venv/bin/python*-config*
-
-          # Bootstrap pip cleanly inside venv
-          curl -sS https://bootstrap.pypa.io/get-pip.py \
-            | python3 - --break-system-packages
-
-          # Install your dependencies
-          python3 -m pip install flask selenium pytest webdriver-manager requests
-
-          # Verify pip list before tests
-          echo "📦 Installed packages:"
-          python3 -m pip list
-
-          # Start Flask app
-          python3 app.py &
-          sleep 3
+          if ! command -v newman >/dev/null; then
+            npm install -g newman
+          fi
         '''
       }
     }
 
-    stage('Run Selenium Tests') {
+    stage('Run Postman Collection') {
       steps {
         sh '''
-          . venv/bin/activate
-          pytest test_e2e.py --capture=no
+          # Run your exported Postman collection
+          newman run your_collection.json \
+            --environment your_environment.json \
+            --reporters cli,html \
+            --reporter-html-export newman-report.html \
+            --disable-unicode --no-color
         '''
       }
     }
@@ -47,8 +38,8 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: '**/*.png', allowEmptyArchive: true
-      echo "✅ Build complete. Check logs above for test outcomes."
+      archiveArtifacts artifacts: 'newman-report.html', allowEmptyArchive: false
+      echo "✅ Newman execution completed. Check newman-report.html in workspace."
     }
   }
 }

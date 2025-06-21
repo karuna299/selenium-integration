@@ -5,24 +5,27 @@ pipeline {
   }
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      steps {
+        // ✅ Use your actual public repo URL here:
+        git url: 'https://github.com/karuna299/selenium-integration.git'
+      }
     }
-    stage('Setup & Start Flask') {
+    stage('Setup & Launch Flask') {
       steps {
         sh '''
-          python3 -m venv venv
-          . venv/bin/activate
+          python3 -m venv "${VENV}"
+          . "${VENV}/bin/activate"
           pip install --upgrade pip
           pip install flask selenium pytest webdriver-manager requests
-          python app.py &
-          sleep 3
+          python app.py &       # Run Flask in background
+          sleep 3               # Allow it to start
         '''
       }
     }
-    stage('Run Tests') {
+    stage('Run Selenium Tests') {
       steps {
         sh '''
-          . venv/bin/activate
+          . "${VENV}/bin/activate"
           pytest test_e2e.py --capture=no --junitxml=pytest-results.xml
         '''
       }
@@ -35,3 +38,4 @@ pipeline {
     }
   }
 }
+

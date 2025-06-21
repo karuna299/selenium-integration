@@ -8,23 +8,27 @@ pipeline {
       }
     }
 
-    stage('Setup & Launch Flask') {
+    stage('Setup Virtualenv & Launch Flask') {
       steps {
         sh '''
           python3 -m venv venv
           . venv/bin/activate
 
-          # Clean out broken pip and reinstall a working version
-          rm -rf venv/lib/python*/site-packages/pip* venv/bin/pip venv/bin/pip3
-          curl -sS https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages
+          # Remove broken pip from venv
+          rm -rf venv/lib/python*/site-packages/pip* venv/bin/pip* venv/bin/python*-config*
 
-          # Install requirements
+          # Bootstrap pip cleanly inside venv
+          curl -sS https://bootstrap.pypa.io/get-pip.py \
+            | python3 - --break-system-packages
+
+          # Install your dependencies
           python3 -m pip install flask selenium pytest webdriver-manager requests
 
-          echo "Installed packages:"
+          # Verify pip list before tests
+          echo "📦 Installed packages:"
           python3 -m pip list
 
-          # Start Flask
+          # Start Flask app
           python3 app.py &
           sleep 3
         '''
@@ -44,7 +48,7 @@ pipeline {
   post {
     always {
       archiveArtifacts artifacts: '**/*.png', allowEmptyArchive: true
-      echo "Build finished. Inspect logs above for test results."
+      echo "✅ Build complete. Check logs above for test outcomes."
     }
   }
 }

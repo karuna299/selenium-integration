@@ -6,8 +6,8 @@ pipeline {
   stages {
     stage('Checkout') {
       steps {
-        // ✅ Use your actual public repo URL here:
-        git url: 'https://github.com/karuna299/selenium-integration.git'
+        git branch: 'main',
+        url: 'https://github.com/karuna299/selenium-integration.git'
       }
     }
     stage('Setup & Launch Flask') {

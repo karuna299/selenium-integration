@@ -13,13 +13,15 @@ pipeline {
     stage('Setup & Launch Flask') {
       steps {
         sh '''
-          python3 -m venv "${VENV}"
-          . "${VENV}/bin/activate"
-          pip install --upgrade pip
-          pip install flask selenium pytest webdriver-manager requests
-          python app.py &       # Run Flask in background
-          sleep 3               # Allow it to start
+          python3 -m venv venv
+          . venv/bin/activate
+          python3 -m pip install --upgrade pip
+          pip install --break-system-packages \
+            flask selenium pytest webdriver-manager requests
+          python app.py &
+          sleep 3
         '''
+
       }
     }
     stage('Run Selenium Tests') {

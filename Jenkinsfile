@@ -16,10 +16,12 @@ pipeline {
           python3 -m venv venv
           . venv/bin/activate
           python3 -m pip install --upgrade pip
-          pip install --break-system-packages \
-            flask selenium pytest webdriver-manager requests
+          export PIP_BREAK_SYSTEM_PACKAGES=1
+          python3 -m pip install flask selenium pytest webdriver-manager requests
+          python3 -m pip list
           python app.py &
           sleep 3
+          
         '''
 
       }

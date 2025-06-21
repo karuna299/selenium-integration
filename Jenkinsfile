@@ -11,24 +11,20 @@ pipeline {
     stage('Setup & Launch Flask') {
       steps {
         sh '''
-          # Create a fresh virtual environment
           python3 -m venv venv
           . venv/bin/activate
 
-          # Replace broken pip inside venv (resolves PEP 668 import errors)
-          rm -rf venv/lib/python*/site-packages/pip* \
-                 venv/bin/pip venv/bin/pip3
+          # Clean out broken pip and reinstall a working version
+          rm -rf venv/lib/python*/site-packages/pip* venv/bin/pip venv/bin/pip3
+          curl -sS https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages
 
-          curl -sS https://bootstrap.pypa.io/get-pip.py \
-            | python3 - --break-system-packages
-
-          # Install project dependencies
+          # Install requirements
           python3 -m pip install flask selenium pytest webdriver-manager requests
 
-          # Log installed packages to verify correct installation
+          echo "Installed packages:"
           python3 -m pip list
 
-          # Start the Flask app in the background
+          # Start Flask
           python3 app.py &
           sleep 3
         '''
@@ -39,7 +35,7 @@ pipeline {
       steps {
         sh '''
           . venv/bin/activate
-          pytest test_e2e.py --capture=no --junitxml=pytest-results.xml
+          pytest test_e2e.py --capture=no
         '''
       }
     }
@@ -47,8 +43,8 @@ pipeline {
 
   post {
     always {
-      junit 'pytest-results.xml'
       archiveArtifacts artifacts: '**/*.png', allowEmptyArchive: true
+      echo "Build finished. Inspect logs above for test results."
     }
   }
 }

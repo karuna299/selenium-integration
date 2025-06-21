@@ -16,15 +16,18 @@ pipeline {
           python3 -m venv venv
           . venv/bin/activate
 
-          # Step 1: bootstrap pip cleanly
+          # Clean out broken pip installations
+          rm -rf venv/lib/python*/site-packages/pip*
+          rm -f venv/bin/pip venv/bin/pip3
+
+          # Bootstrap a fresh pip bypassing PEP‑668
           curl -sS https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages
 
-          # Step 2: Install dependencies smoothly
           python3 -m pip install flask selenium pytest webdriver-manager requests
+          python3 -m pip list
 
           python app.py &
-          sleep 3
-          
+          sleep 3          
         '''
 
       }

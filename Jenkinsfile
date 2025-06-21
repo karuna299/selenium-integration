@@ -8,29 +8,23 @@ pipeline {
       }
     }
 
-    stage('Setup Node & Newman') {
+    stage('Install & Launch Flask') {
       steps {
-        script {
-          // Use Jenkins NodeJS plugin tools
-        }
-        // Shell commands to ensure Node.js and Newman
         sh '''
-          if ! command -v newman >/dev/null; then
-            npm install -g newman
-          fi
+          python3 -m venv venv
+          . venv/bin/activate
+          # ... pip bootstrap and install logic ...
+          python app.py &
+          sleep 3
         '''
       }
     }
 
-    stage('Run Postman Collection') {
+    stage('Run Selenium Tests') {
       steps {
         sh '''
-          # Run your exported Postman collection
-          newman run your_collection.json \
-            --environment your_environment.json \
-            --reporters cli,html \
-            --reporter-html-export newman-report.html \
-            --disable-unicode --no-color
+          . venv/bin/activate
+          pytest test_e2e.py --capture=no
         '''
       }
     }
@@ -38,8 +32,8 @@ pipeline {
 
   post {
     always {
-      archiveArtifacts artifacts: 'newman-report.html', allowEmptyArchive: false
-      echo "✅ Newman execution completed. Check newman-report.html in workspace."
+      archiveArtifacts artifacts: '**/*.png', allowEmptyArchive: true
+      echo "Pipeline finished"
     }
   }
 }
